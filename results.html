@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body>
+<title>STEAM Week Results</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: organizer dashboard — summary tiles, activity ranking table, overall bars, then feedback reader. Station-map palette, light only. */
+:root{
+  --bg:#F4F6F9; --surface:#FFFFFF; --ink:#1F2430; --muted:#4A5466; --line:#C9D3DF; --soft:#EEF3F8;
+  --navy:#14365C; --accent:#B4601A; --orange:#F28C28; --good:#0C7469; --mid:#B4601A; --low:#C93A4E;
+  --font:Inter, Arial, sans-serif; color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:0 48px}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header{padding-block:26px 0;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
+.kicker{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1{margin:4px 0 0;font-size:clamp(26px,5vw,36px);font-weight:800;color:var(--navy);line-height:1.1}
+h2{margin:0;font-size:18px;font-weight:800;color:var(--navy)}
+.sub{color:var(--muted);font-size:13px;margin:2px 0 0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+select,input[type=text],input[type=password]{font:inherit;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:8px;padding:9px 10px;min-height:42px}
+button{font:inherit;font-weight:700;border-radius:8px;padding:9px 14px;min-height:42px;cursor:pointer;border:1.5px solid var(--line);background:var(--surface);color:var(--ink)}
+button.primary{background:var(--navy);border-color:var(--navy);color:#FFFFFF}
+select:focus,input:focus,button:focus-visible{outline:3px solid rgba(242,140,40,.45);outline-offset:1px}
+.notice{background:#FFF4E6;border:1px solid #F3C99A;color:#7A3F0C;border-radius:10px;padding:10px 12px;font-size:14px}
+.err{color:var(--low);font-weight:700;margin:0}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.tile .n{font-size:30px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums}
+.tile .l{font-size:13px;color:var(--muted);font-weight:600}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:8px 8px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+th{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;background:var(--soft)}
+td.l,th.l{text-align:left}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--soft)}
+tbody tr.sel{background:#FFF4E6}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;vertical-align:middle}
+.bar{position:relative;height:10px;width:120px;background:var(--soft);border-radius:5px;display:inline-block;vertical-align:middle;margin-right:8px}
+.bar i{position:absolute;inset:0 auto 0 0;border-radius:5px}
+.g{color:var(--good);font-weight:700}.m{color:var(--mid);font-weight:700}.lo{color:var(--low);font-weight:700}
+.crit{display:grid;grid-template-columns:minmax(140px,240px) 1fr 44px;gap:8px 12px;align-items:center;font-size:14px}
+.crit .track{height:14px;background:var(--soft);border-radius:7px;position:relative}
+.crit .track i{position:absolute;inset:0 auto 0 0;border-radius:7px;background:var(--navy)}
+.crit .v{font-weight:800;font-variant-numeric:tabular-nums;text-align:right}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button[aria-pressed=true]{background:var(--navy);color:#FFFFFF;border-color:var(--navy)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.fb{border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.fb .who{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
+.fb .who b{color:var(--ink);font-size:14px}
+.chip{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:700;border:1.5px solid var(--navy)}
+.fb dl{margin:0;display:flex;flex-direction:column;gap:6px}
+.fb dt{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent)}
+.fb dd{margin:0;overflow-wrap:anywhere}
+.stars{font-weight:800;color:var(--navy)}
+.secgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.sec{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;display:flex;justify-content:space-between;gap:8px}
+.sec.zero{background:#FDECEE;border-color:#F2B8C0}
+.empty{color:var(--muted);font-style:italic}
+@media (max-width:760px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.two{grid-template-columns:1fr}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="kicker">STEAM Week 2026 · Organizers</div>
+      <h1>Evaluation Results</h1>
+      <p class="sub" id="updated"></p>
+    </div>
+    <div class="toolbar" id="tools" hidden>
+      <label for="house" class="sub" style="margin:0">House</label>
+      <select id="house"><option value="">All houses</option></select>
+      <button type="button" id="refresh">Refresh</button>
+      <button type="button" id="csv">Download CSV</button>
+    </div>
+  </header>
+
+  <p class="notice" id="sample" hidden>Sample data for preview only. These are made-up responses to show the layout. Once the Google Sheet link is added, this page shows real answers.</p>
+
+  <form class="panel" id="gate" hidden>
+    <h2>Enter the organizer passcode</h2>
+    <div class="toolbar">
+      <input type="password" id="pass" autocomplete="current-password" placeholder="Passcode" aria-label="Passcode">
+      <button class="primary" type="submit">Show results</button>
+    </div>
+    <p class="err" id="gateerr" hidden></p>
+  </form>
+
+  <div id="dash" hidden style="display:contents">
+    <div class="tiles">
+      <div class="tile"><div class="n" id="t_n">0</div><div class="l">Responses</div></div>
+      <div class="tile"><div class="n" id="t_act">–</div><div class="l">Average activity rating (of 5)</div></div>
+      <div class="tile"><div class="n" id="t_all">–</div><div class="l">Average STEAM Week rating (of 5)</div></div>
+      <div class="tile"><div class="n" id="t_sec">0</div><div class="l">Sections with responses (of 32)</div></div>
+    </div>
+
+    <section class="panel">
+      <div><h2>Activities, ranked by overall rating</h2><p class="sub">Tap an activity to read its feedback below. Green 4.0 and up, orange 3.0–3.9, red below 3.0.</p></div>
+      <div class="scroll"><table>
+        <thead><tr><th class="l">Activity</th><th>Resp.</th><th class="l">Overall</th><th>Rules</th><th>On time</th><th>Materials</th><th>Facilitators</th><th>Challenge</th><th>STEAM skills</th><th>Teamwork</th><th>Enjoyed</th></tr></thead>
+        <tbody id="acttable"></tbody>
+      </table></div>
+    </section>
+
+    <div class="two">
+      <section class="panel"><h2>STEAM Week overall</h2><div class="crit" id="overall"></div></section>
+      <section class="panel"><h2>Responses by section</h2><p class="sub" style="margin-top:-8px">Red means no responses yet.</p><div class="secgrid" id="secs"></div></section>
+    </div>
+
+    <section class="panel">
+      <div><h2>Written feedback</h2><p class="sub" id="fbcount"></p></div>
+      <div class="toolbar">
+        <div class="tabs" role="group" aria-label="Feedback type">
+          <button type="button" id="tab_act" aria-pressed="true">About the activity</button>
+          <button type="button" id="tab_all" aria-pressed="false">About STEAM Week</button>
+        </div>
+        <select id="fbact" aria-label="Activity"><option value="">All activities</option></select>
+        <input type="text" id="search" placeholder="Search words or names" aria-label="Search feedback">
+      </div>
+      <div class="cards" id="cards"></div>
+    </section>
+  </div>
+</div>
+
+<script>
+/* ===== SETTINGS ===== Paste the same Google Apps Script web app URL used in index.html. */
+const SCRIPT_URL = "";
+
+const HOUSES = ["RedShield","Graywolf","Bluefire","Silverblade","Orcastel"];
+const HOUSE_COLORS = { RedShield:["#E8392A","#FFFFFF"], Graywolf:["#9B9B9B","#14365C"], Bluefire:["#74F2F7","#14365C"], Silverblade:["#E6E6E6","#14365C"], Orcastel:["#F6F04A","#14365C"] };
+const SECTIONS = {
+  RedShield:["Truth","Temperance","Obedience","Charity","Azpeitia","Montserrat","Magis"],
+  Graywolf:["Resilience","Honesty","Service","Integrity","La Storta","Eloquentia"],
+  Bluefire:["Peace","Diligence","Prudence","Faith","Manresa","Gravitas"],
+  Silverblade:["Courage","Fortitude","Perseverance","Wisdom","Loyola","Sapientia","Amare"],
+  Orcastel:["Hope","Humility","Generosity","Justice","Pamplona","Servire"]
+};
+const GROUPS = {
+  "#6A4FB3":["Human Tangram","Rubik's Cube","Tower of Hanoi","Tumbang Preso (Math Edition)","Nuthematics"],
+  "#5E8A1E":["Paper Bridge","Fold It","Thread It to Win It","Bag It to Win It"],
+  "#0C7469":["Flip the Bottle Challenge","Build and Balance","Roll with the Force","The Human Chain","Paper Relay","Rocket Launcher","Shoot the Stick in the Bottle","Build the Body System"],
+  "#C93A4E":["Digital Art","Quiz Bee"],
+  "#2E6FC9":["MLBB","MazeBot Madness","Circuit Sleuth Challenge","Open Games"]
+};
+const ACTS = Object.values(GROUPS).flat();
+const colorOf = a => Object.keys(GROUPS).find(c => GROUPS[c].includes(a)) || "#14365C";
+const A_KEYS = ["a1","a2","a3","a4","a5","a6","a7","a8"];
+const O_ITEMS = [["o1","Theme FACITE reflected"],["o2","In-class activities helped"],["o3","Culminating Day well organized"],["o4","Venues safe and clean"],["o5","Variety of activities"],["o6","House camaraderie"],["o_overall","Overall STEAM Week rating"]];
+const CSV_COLS = ["timestamp","section","house","grade","classNo","name","activity",...A_KEYS,"a_overall","a_like","a_improve","a_learn","o1","o2","o3","o4","o5","o6","o_overall","o_best","o_improve","o_suggest"];
+
+const $ = id => document.getElementById(id);
+let ROWS = [], passcode = "", fbMode = "act", selAct = "";
+
+const num = v => { const n = Number(v); return n >= 1 && n <= 5 ? n : null; };
+const avg = arr => { const v = arr.map(num).filter(x => x !== null); return v.length ? v.reduce((a,b)=>a+b,0)/v.length : null; };
+const fmt = x => x === null ? "–" : x.toFixed(2);
+const cls = x => x === null ? "" : x >= 4 ? "g" : x >= 3 ? "m" : "lo";
+const el = (tag, props = {}, ...kids) => { const e = document.createElement(tag); Object.assign(e, props); for (const k of kids) e.append(k); return e; };
+
+function sampleRows(){
+  let s = 7; const rnd = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+  const pick = a => a[Math.floor(rnd() * a.length)];
+  const likes = ["Working with my housemates","It was fast and exciting","The challenge made us think","Our team strategy worked"];
+  const imps = ["Explain the rules before starting","Start on time","More materials per team","A bigger venue"];
+  const learns = ["Balance and center of gravity","Patterns and logic","Teamwork and planning","How circuits work"];
+  const bests = ["The culminating day games","Cheering for my house","Trying new STEAM activities"];
+  const oimps = ["Shorter waiting time","Clearer venue signs","More water stations"];
+  const sugg = ["Egg drop challenge","Coding relay","Science escape room","Math treasure hunt"];
+  const out = [];
+  for (let i = 0; i < 64; i++){
+    const house = pick(HOUSES), section = pick(SECTIONS[house]), act = pick(ACTS);
+    const base = 3 + rnd() * 2; const r = () => Math.max(1, Math.min(5, Math.round(base + (rnd() - .5) * 1.6)));
+    const o = { timestamp: new Date(Date.UTC(2026,10,6,8,0) + i * 60000).toISOString(), section, house, grade: "", classNo: 1 + (i % 40), name: "Sample Student " + (i + 1), activity: act };
+    A_KEYS.forEach(k => o[k] = r()); o.a_overall = r();
+    o.a_like = pick(likes); o.a_improve = rnd() < .7 ? pick(imps) : ""; o.a_learn = pick(learns);
+    ["o1","o2","o3","o4","o5","o6","o_overall"].forEach(k => o[k] = r());
+    o.o_best = pick(bests); o.o_improve = rnd() < .6 ? pick(oimps) : ""; o.o_suggest = rnd() < .5 ? pick(sugg) : "";
+    out.push(o);
+  }
+  return out;
+}
+
+function filtered(){ const h = $("house").value; return h ? ROWS.filter(r => r.house === h) : ROWS; }
+
+function render(){
+  const rows = filtered(), players = rows.filter(r => num(r.a_overall) !== null);
+  $("t_n").textContent = rows.length;
+  $("t_act").textContent = fmt(avg(players.map(r => r.a_overall)));
+  $("t_all").textContent = fmt(avg(rows.map(r => r.o_overall)));
+  $("t_sec").textContent = new Set(ROWS.map(r => r.section)).size;
+
+  // Activity table
+  const tb = $("acttable"); tb.textContent = "";
+  const stats = ACTS.map(a => { const rs = players.filter(r => r.activity === a); return { a, n: rs.length, ov: avg(rs.map(r => r.a_overall)), c: A_KEYS.map(k => avg(rs.map(r => r[k]))) }; })
+    .sort((x, y) => (y.ov ?? -1) - (x.ov ?? -1) || y.n - x.n);
+  for (const s of stats){
+    const tr = el("tr"); if (s.a === selAct) tr.className = "sel";
+    tr.tabIndex = 0;
+    const name = el("td", { className: "l" }, el("span", { className: "dot", style: `background:${colorOf(s.a)}` }), s.a);
+    const bar = el("span", { className: "bar" }, el("i", { style: `width:${s.ov ? (s.ov / 5 * 100) : 0}%;background:${colorOf(s.a)}` }));
+    const ovtd = el("td", { className: "l" }, bar, el("span", { className: cls(s.ov), textContent: fmt(s.ov) }));
+    tr.append(name, el("td", { textContent: s.n }), ovtd, ...s.c.map(v => el("td", { className: cls(v), textContent: fmt(v) })));
+    const choose = () => { selAct = selAct === s.a ? "" : s.a; $("fbact").value = selAct; setMode("act"); render(); $("cards").scrollIntoView({ behavior: "smooth", block: "start" }); };
+    tr.addEventListener("click", choose); tr.addEventListener("keydown", e => { if (e.key === "Enter") choose(); });
+    tb.append(tr);
+  }
+
+  // Overall bars
+  const ov = $("overall"); ov.textContent = "";
+  for (const [k, label] of O_ITEMS){
+    const v = avg(rows.map(r => r[k]));
+    ov.append(el("div", { textContent: label, style: k === "o_overall" ? "font-weight:800" : "" }),
+      el("div", { className: "track" }, el("i", { style: `width:${v ? v / 5 * 100 : 0}%;${k === "o_overall" ? "background:#F28C28" : ""}` })),
+      el("div", { className: "v " + cls(v), textContent: fmt(v) }));
+  }
+
+  // Sections
+  const sg = $("secs"); sg.textContent = "";
+  const hs = $("house").value ? [$("house").value] : HOUSES;
+  for (const h of hs) for (const sec of SECTIONS[h]){
+    const n = ROWS.filter(r => r.section === sec).length;
+    sg.append(el("div", { className: "sec" + (n ? "" : " zero") }, el("span", { textContent: sec }), el("b", { textContent: n })));
+  }
+  renderCards(rows);
+}
+
+function renderCards(rows){
+  const q = $("search").value.trim().toLowerCase(), act = $("fbact").value;
+  const fields = fbMode === "act" ? [["a_like","Liked most"],["a_improve","Improve"],["a_learn","Learned / skill used"]] : [["o_best","Best part"],["o_improve","Improve next year"],["o_suggest","Suggested activity"]];
+  let list = rows.filter(r => fields.some(([k]) => String(r[k] || "").trim()));
+  if (fbMode === "act") list = list.filter(r => num(r.a_overall) !== null);
+  if (act) list = list.filter(r => r.activity === act);
+  if (q) list = list.filter(r => [r.name, r.section, r.activity, ...fields.map(([k]) => r[k])].join(" ").toLowerCase().includes(q));
+  list = list.slice().reverse();
+  $("fbcount").textContent = `${list.length} response${list.length === 1 ? "" : "s"} with written feedback`;
+  const box = $("cards"); box.textContent = "";
+  if (!list.length){ box.append(el("p", { className: "empty", textContent: "No written feedback matches these filters yet." })); return; }
+  for (const r of list.slice(0, 300)){
+    const hc = HOUSE_COLORS[r.house] || ["#EEF3F8","#14365C"];
+    const chip = el("span", { className: "chip", textContent: r.house || "?" }); chip.style.background = hc[0]; chip.style.color = hc[1];
+    const rating = fbMode === "act" ? r.a_overall : r.o_overall;
+    const who = el("div", { className: "who" }, el("b", { textContent: r.name }), document.createTextNode(`${r.section} · #${r.classNo}`), chip);
+    const head = el("div", { className: "who" }, el("span", { textContent: fbMode === "act" ? r.activity : "STEAM Week" }), el("span", { className: "stars", textContent: `· ${rating}/5` }));
+    const dl = el("dl");
+    for (const [k, label] of fields){ const t = String(r[k] || "").trim(); if (t) dl.append(el("dt", { textContent: label }), el("dd", { textContent: t })); }
+    box.append(el("article", { className: "fb" }, who, head, dl));
+  }
+}
+
+function setMode(m){ fbMode = m; $("tab_act").setAttribute("aria-pressed", m === "act"); $("tab_all").setAttribute("aria-pressed", m === "all"); $("fbact").hidden = m !== "act"; }
+
+function showDash(){ $("gate").hidden = true; $("dash").hidden = false; $("dash").style.display = "contents"; $("tools").hidden = false; render(); }
+
+async function load(){
+  if (!SCRIPT_URL){ ROWS = sampleRows(); $("updated").textContent = "Sample data"; return showDash(); }
+  $("gateerr").hidden = true;
+  try{
+    const res = await fetch(`${SCRIPT_URL}?key=${encodeURIComponent(passcode)}&t=${Date.now()}`);
+    const data = await res.json();
+    if (!data.ok){ $("dash").hidden = true; $("dash").style.display = "none"; $("gate").hidden = false; $("gateerr").hidden = false; $("gateerr").textContent = data.error === "wrong_passcode" ? "That passcode is not correct." : "The Sheet returned an error: " + data.error; return; }
+    ROWS = data.rows;
+    $("updated").textContent = "Updated " + new Date(data.updated).toLocaleString();
+    try { sessionStorage.setItem("steam_pass", passcode); } catch(e) {}
+    showDash();
+  }catch(e){
+    $("gate").hidden = false; $("gateerr").hidden = false; $("gateerr").textContent = "Couldn't reach the Google Sheet. Check the internet connection and the SCRIPT_URL, then try again.";
+  }
+}
+
+function downloadCSV(){
+  const esc = v => { const s = String(v ?? ""); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const lines = [CSV_COLS.join(","), ...filtered().map(r => CSV_COLS.map(k => esc(r[k])).join(","))];
+  const url = URL.createObjectURL(new Blob(["﻿" + lines.join("\n")], { type: "text/csv" }));
+  const a = el("a", { href: url, download: "steam-week-2026-evaluation.csv" }); document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+// Init
+for (const h of HOUSES) $("house").append(el("option", { value: h, textContent: h }));
+for (const a of ACTS) $("fbact").append(el("option", { value: a, textContent: a }));
+$("house").addEventListener("change", render);
+$("fbact").addEventListener("change", () => { selAct = $("fbact").value; render(); });
+$("search").addEventListener("input", () => renderCards(filtered()));
+$("tab_act").addEventListener("click", () => { setMode("act"); renderCards(filtered()); });
+$("tab_all").addEventListener("click", () => { setMode("all"); renderCards(filtered()); });
+$("refresh").addEventListener("click", load);
+$("csv").addEventListener("click", downloadCSV);
+$("gate").addEventListener("submit", e => { e.preventDefault(); passcode = $("pass").value.trim(); load(); });
+$("dash").style.display = "none";
+if (!SCRIPT_URL){ $("sample").hidden = false; load(); }
+else {
+  let saved = ""; try { saved = sessionStorage.getItem("steam_pass") || ""; } catch(e) {}
+  if (saved){ passcode = saved; load(); } else { $("gate").hidden = false; }
+}
+</script>
+
+</body>
+</html>

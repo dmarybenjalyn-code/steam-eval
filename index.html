@@ -21,6 +21,7 @@
   color-scheme:light;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;margin:0;
   padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:0 48px}
 .wrap{max-width:680px;margin:0 auto}
@@ -157,7 +158,7 @@ button[disabled]{opacity:.6;cursor:wait}
 
 <script>
 /* ===== SETTINGS ===== Paste your Google Apps Script web app URL between the quotes. */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8DvQ5TJ4YWBl8sIAxt8mK_NSSCM1njnHiYb-4fD373DQqjrqsMnXB2oSPajrNSly1lA/exec";
+const SCRIPT_URL = "";
 
 const SECTIONS = {
   RedShield:  [["Truth",7],["Temperance",8],["Obedience",9],["Charity",10],["Azpeitia",11],["Montserrat",11],["Magis",12]],
@@ -197,7 +198,6 @@ const OVERALL_QS = [
   ["o4","The venues were safe, clean and comfortable."],
   ["o5","There was a good variety of activities to choose from."],
   ["o6","STEAM Week strengthened the camaraderie in my house."],
-  ["o7","I want to join STEAM Week again next year."],
   ["o_overall","Overall, how would you rate STEAM Week 2026?", true]
 ];
 const AGREE = ["Strongly disagree","Disagree","Neutral","Agree","Strongly agree"];
