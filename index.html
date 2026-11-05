@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body>
+<title>STEAM Week Evaluation</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Nunito+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: single centered column, one step card at a time, sticky progress bar */
+:root{
+  --bg:#F3F5F9; --surface:#FFFFFF; --ink:#18233A; --muted:#55607A; --line:#D7DDE8;
+  --navy:#14365C; --accent:#E07A1F; --accent-ink:#FFFFFF; --soft:#E9EEF6; --ok:#1E7A4F; --err:#B4232F;
+  --display:"Bricolage Grotesque", "Trebuchet MS", sans-serif;
+  --body:"Nunito Sans", "Segoe UI", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1522; --surface:#18213A; --ink:#E8ECF4; --muted:#A3AEC4; --line:#2D3856;
+  --navy:#9FC0EA; --accent:#F29A4A; --accent-ink:#1B1206; --soft:#202B47; --ok:#5CC995; --err:#FF8A92; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1522; --surface:#18213A; --ink:#E8ECF4; --muted:#A3AEC4; --line:#2D3856;
+  --navy:#9FC0EA; --accent:#F29A4A; --accent-ink:#1B1206; --soft:#202B47; --ok:#5CC995; --err:#FF8A92; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;margin:0;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:0 48px}
+.wrap{max-width:680px;margin:0 auto}
+header{padding-block:28px 12px}
+.kicker{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,7vw,40px);line-height:1.05;margin:6px 0 6px;color:var(--navy);text-wrap:balance}
+.lede{color:var(--muted);margin:0}
+.progress{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:12px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.steps span{height:6px;border-radius:3px;background:var(--line)}
+.steps span.on{background:var(--accent)}
+.steplabel{font-size:13px;color:var(--muted);margin-top:6px;font-weight:600}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:18px}
+h2{font-family:var(--display);font-weight:600;font-size:22px;margin:0;color:var(--navy)}
+.hint{font-size:14px;color:var(--muted);margin:-10px 0 0}
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:15px}
+select,input[type=text],input[type=number],textarea{font:inherit;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:11px 12px;width:100%}
+textarea{min-height:84px;resize:vertical}
+select:focus,input:focus,textarea:focus,button:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:1px;border-color:var(--accent)}
+.row2{display:grid;grid-template-columns:1fr 2fr;gap:12px}
+.tag{display:inline-flex;gap:8px;align-items:center;font-size:14px;color:var(--muted)}
+.chip{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:700;font-size:13px;border:1.5px solid var(--line)}
+.q{display:flex;flex-direction:column;gap:8px;padding-block:4px}
+.q p{margin:0;font-weight:700}
+.scale{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.scale input{position:absolute;opacity:0;pointer-events:none}
+.scale label{display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 2px;border:1.5px solid var(--line);border-radius:10px;cursor:pointer;font-size:12px;color:var(--muted);text-align:center;line-height:1.2;min-height:56px;justify-content:center}
+.scale label b{font-family:var(--display);font-size:20px;color:var(--ink)}
+.scale input:checked + label{background:var(--navy);border-color:var(--navy);color:var(--surface)}
+.scale input:checked + label b{color:var(--surface)}
+.scale input:focus-visible + label{outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent)}
+.legend{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.q.missing p{color:var(--err)}
+.nav{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap}
+button{font:inherit;font-weight:700;border-radius:10px;padding:12px 18px;cursor:pointer;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);min-height:46px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button[disabled]{opacity:.6;cursor:wait}
+.err{color:var(--err);font-weight:700;font-size:14px;margin:0}
+.notice{background:var(--soft);border-radius:10px;padding:10px 12px;font-size:14px;color:var(--muted)}
+.review dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0;font-size:15px}
+.review dt{color:var(--muted)} .review dd{margin:0;font-weight:700}
+.done{text-align:center;align-items:center}
+.done .big{font-family:var(--display);font-size:30px;font-weight:800;color:var(--ok)}
+@media (max-width:420px){.scale label{font-size:10.5px}.row2{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:no-preference){.card{animation:in .25s ease-out}@keyframes in{from{transform:translateY(6px);opacity:.6}to{transform:none;opacity:1}}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="kicker">STEAM Week 2026 · FACITE</div>
+    <h1>Culminating Day Evaluation</h1>
+    <p class="lede">Tell us how the activity you joined went, and how STEAM Week went overall. It takes about 5 minutes. Please answer honestly.</p>
+  </header>
+  <p class="notice" id="demo" hidden>Preview mode: answers are not saved yet. Once the Google Sheet link is added, every submission is recorded.</p>
+
+  <div class="progress" aria-hidden="true">
+    <div class="steps"><span></span><span></span><span></span><span></span></div>
+    <div class="steplabel" id="steplabel"></div>
+  </div>
+
+  <form id="form" novalidate>
+    <!-- STEP 1 -->
+    <section class="card" data-step="1">
+      <h2>About you</h2>
+      <label class="f" for="section">Section
+        <select id="section" required><option value="">Choose your section</option></select>
+      </label>
+      <div class="tag" id="sectioninfo" hidden></div>
+      <div class="row2">
+        <label class="f" for="classno">Class number
+          <input type="number" id="classno" inputmode="numeric" min="1" max="60" required placeholder="e.g. 12">
+        </label>
+        <label class="f" for="name">Full name
+          <input type="text" id="name" autocomplete="name" required placeholder="First name and surname">
+        </label>
+      </div>
+      <label class="f" for="activity">Which activity did you join on Nov 6?
+        <select id="activity" required><option value="">Choose your activity</option></select>
+      </label>
+      <p class="err" id="err1" hidden></p>
+      <div class="nav"><span></span><button type="button" class="primary" data-next>Next</button></div>
+    </section>
+
+    <!-- STEP 2 -->
+    <section class="card" data-step="2" hidden>
+      <h2 id="acttitle">Your activity</h2>
+      <p class="hint">1 = Strongly disagree · 5 = Strongly agree</p>
+      <div id="actqs"></div>
+      <label class="f" for="a_like">What did you like most about this activity?
+        <textarea id="a_like" maxlength="600"></textarea></label>
+      <label class="f" for="a_improve">What should we improve in this activity?
+        <textarea id="a_improve" maxlength="600"></textarea></label>
+      <label class="f" for="a_learn">What did you learn or which STEAM skill did you use?
+        <textarea id="a_learn" maxlength="600"></textarea></label>
+      <p class="err" id="err2" hidden></p>
+      <div class="nav"><button type="button" data-back>Back</button><button type="button" class="primary" data-next>Next</button></div>
+    </section>
+
+    <!-- STEP 3 -->
+    <section class="card" data-step="3" hidden>
+      <h2>STEAM Week overall</h2>
+      <p class="hint">Think about the whole week: the Nov 3 opening, the in-class activities, and the Culminating Day.</p>
+      <div id="overallqs"></div>
+      <label class="f" for="o_best">What was the best part of STEAM Week for you?
+        <textarea id="o_best" maxlength="600"></textarea></label>
+      <label class="f" for="o_improve">What should we improve next year?
+        <textarea id="o_improve" maxlength="600"></textarea></label>
+      <label class="f" for="o_suggest">Suggest an activity or game for next year's STEAM Week.
+        <textarea id="o_suggest" maxlength="600"></textarea></label>
+      <p class="err" id="err3" hidden></p>
+      <div class="nav"><button type="button" data-back>Back</button><button type="button" class="primary" data-next>Review</button></div>
+    </section>
+
+    <!-- STEP 4 -->
+    <section class="card review" data-step="4" hidden>
+      <h2>Check and submit</h2>
+      <dl id="summary"></dl>
+      <p class="hint" style="margin:0">Make sure your section, class number and name are correct. You can go back to change any answer.</p>
+      <p class="err" id="err4" hidden></p>
+      <div class="nav"><button type="button" data-back>Back</button><button type="submit" class="primary" id="submitbtn">Submit evaluation</button></div>
+    </section>
+
+    <!-- DONE -->
+    <section class="card done" data-step="5" hidden>
+      <div class="big">Thank you!</div>
+      <p id="donemsg" style="margin:0">Your evaluation was submitted.</p>
+      <p class="hint" style="margin:0">Minds in Motion, Hands in Creation.</p>
+      <button type="button" id="again">Submit another response</button>
+    </section>
+  </form>
+</div>
+
+<script>
+/* ===== SETTINGS ===== Paste your Google Apps Script web app URL between the quotes. */
+const SCRIPT_URL = "";
+
+const SECTIONS = {
+  RedShield:  [["Truth",7],["Temperance",8],["Obedience",9],["Charity",10],["Azpeitia",11],["Montserrat",12],["Magis",12]],
+  Graywolf:   [["Resilience",7],["Honesty",8],["Service",9],["Integrity",10],["La Storta",11],["Eloquentia",12]],
+  Bluefire:   [["Peace",7],["Diligence",8],["Prudence",9],["Faith",10],["Manresa",11],["Gravitas",12]],
+  Silverblade:[["Courage",7],["Fortitude",8],["Perseverance",9],["Wisdom",10],["Loyola",11],["Sapientia",12],["Amare",12]],
+  Orcastel:   [["Hope",7],["Humility",8],["Generosity",9],["Justice",10],["Pamplona",11],["Servire",12]]
+};
+const ACTIVITIES = {
+  "Math Challenges": ["Human Tangram","Rubik's Cube","Tower of Hanoi","Tumbang Preso (Math Edition)","Nuthematics"],
+  "Build & Skill Challenges": ["Paper Bridge","Fold It","Thread It to Win It","Bag It to Win It"],
+  "Science Challenges": ["Flip the Bottle Challenge","Build and Balance","Roll with the Force","The Human Chain","Paper Relay","Rocket Launcher","Shoot the Stick in the Bottle","Build the Body System"],
+  "Arts & Brains": ["Digital Art","Quiz Bee"],
+  "STEAM Arcade": ["MLBB","MazeBot Madness","Circuit Sleuth Challenge","Open Games"],
+  "I did not play a game": ["Student facilitator","Cheered for my house"]
+};
+const NONPLAY = ["Student facilitator","Cheered for my house"];
+
+const ACT_QS = [
+  ["a1","The mechanics and rules were explained clearly."],
+  ["a2","The activity started on time and ran smoothly."],
+  ["a3","The materials were complete and ready to use."],
+  ["a4","The facilitators were helpful and fair in scoring."],
+  ["a5","The activity was challenging but doable."],
+  ["a6","I used science, technology, engineering, art or math skills in this activity."],
+  ["a7","I worked well with my teammates and housemates."],
+  ["a8","I enjoyed this activity."],
+  ["a_overall","Overall, how would you rate this activity?", true]
+];
+const OVERALL_QS = [
+  ["o1","The theme FACITE: Minds in Motion, Hands in Creation was reflected in the activities."],
+  ["o2","The in-class STEAM activities (Nov 3–5) helped me learn."],
+  ["o3","The Culminating Day was well organized (schedule, venues, directions)."],
+  ["o4","The venues were safe, clean and comfortable."],
+  ["o5","There was a good variety of activities to choose from."],
+  ["o6","STEAM Week strengthened the camaraderie in my house."],
+  ["o7","I want to join STEAM Week again next year."],
+  ["o_overall","Overall, how would you rate STEAM Week 2026?", true]
+];
+const AGREE = ["Strongly disagree","Disagree","Neutral","Agree","Strongly agree"];
+const RATE  = ["Poor","Fair","Good","Very good","Excellent"];
+
+const $ = id => document.getElementById(id);
+const sectionMap = {};
+
+function buildSelects(){
+  const s = $("section");
+  for (const [house, list] of Object.entries(SECTIONS)){
+    const g = document.createElement("optgroup"); g.label = house;
+    for (const [name, grade] of list){
+      sectionMap[name] = {house, grade};
+      const o = document.createElement("option"); o.value = name; o.textContent = `${name} (Grade ${grade})`; g.appendChild(o);
+    }
+    s.appendChild(g);
+  }
+  const a = $("activity");
+  for (const [grp, list] of Object.entries(ACTIVITIES)){
+    const g = document.createElement("optgroup"); g.label = grp;
+    for (const n of list){ const o = document.createElement("option"); o.value = n; o.textContent = n; g.appendChild(o); }
+    a.appendChild(g);
+  }
+}
+function buildScale(container, qs){
+  for (const [key, text, isRating] of qs){
+    const words = isRating ? RATE : AGREE;
+    const div = document.createElement("div"); div.className = "q"; div.dataset.key = key;
+    const p = document.createElement("p"); p.id = "lbl_" + key; p.textContent = text; div.appendChild(p);
+    const sc = document.createElement("div"); sc.className = "scale"; sc.setAttribute("role","radiogroup"); sc.setAttribute("aria-labelledby","lbl_" + key);
+    for (let v = 1; v <= 5; v++){
+      const id = `${key}_${v}`;
+      const inp = document.createElement("input"); inp.type = "radio"; inp.name = key; inp.id = id; inp.value = v;
+      const lb = document.createElement("label"); lb.htmlFor = id;
+      const b = document.createElement("b"); b.textContent = v; lb.appendChild(b);
+      lb.appendChild(document.createTextNode(words[v-1]));
+      sc.appendChild(inp); sc.appendChild(lb);
+    }
+    div.appendChild(sc); container.appendChild(div);
+  }
+}
+buildSelects();
+buildScale($("actqs"), ACT_QS);
+buildScale($("overallqs"), OVERALL_QS);
+if (!SCRIPT_URL) $("demo").hidden = false;
+
+$("section").addEventListener("change", () => {
+  const info = sectionMap[$("section").value], el = $("sectioninfo");
+  if (!info){ el.hidden = true; return; }
+  el.hidden = false; el.textContent = "";
+  const c = document.createElement("span"); c.className = "chip"; c.textContent = info.house;
+  el.append(c, document.createTextNode(`Grade ${info.grade}`));
+});
+
+let step = 1;
+const labels = {1:"Step 1 of 4 · About you",2:"Step 2 of 4 · Your activity",3:"Step 3 of 4 · STEAM Week overall",4:"Step 4 of 4 · Review",5:"Submitted"};
+const played = () => !NONPLAY.includes($("activity").value);
+function show(n){
+  step = n;
+  document.querySelectorAll("[data-step]").forEach(s => s.hidden = Number(s.dataset.step) !== n);
+  document.querySelectorAll(".steps span").forEach((s,i) => s.classList.toggle("on", i < Math.min(n,4)));
+  $("steplabel").textContent = labels[n];
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+function val(key){ const c = document.querySelector(`input[name="${key}"]:checked`); return c ? Number(c.value) : ""; }
+function checkScale(qs, errId){
+  let missing = 0;
+  for (const [key] of qs){
+    const q = document.querySelector(`.q[data-key="${key}"]`);
+    const ok = val(key) !== ""; q.classList.toggle("missing", !ok); if (!ok) missing++;
+  }
+  const e = $(errId); e.hidden = !missing; e.textContent = missing ? `Please answer all rating questions (${missing} left, shown in red).` : "";
+  return !missing;
+}
+function validate(n){
+  if (n === 1){
+    const e = $("err1"); const probs = [];
+    if (!$("section").value) probs.push("your section");
+    const cn = Number($("classno").value); if (!cn || cn < 1 || cn > 60) probs.push("a class number from 1 to 60");
+    if ($("name").value.trim().split(/\s+/).length < 2) probs.push("your first name and surname");
+    if (!$("activity").value) probs.push("the activity you joined");
+    e.hidden = !probs.length; e.textContent = probs.length ? "Please enter " + probs.join(", ") + "." : "";
+    return !probs.length;
+  }
+  if (n === 2) return checkScale(ACT_QS, "err2");
+  if (n === 3) return checkScale(OVERALL_QS, "err3");
+  return true;
+}
+function next(){
+  if (!validate(step)) return;
+  if (step === 1){ $("acttitle").textContent = $("activity").value; return show(played() ? 2 : 3); }
+  if (step === 3) buildSummary();
+  show(step + 1);
+}
+function back(){ show(step === 3 && !played() ? 1 : step - 1); }
+document.querySelectorAll("[data-next]").forEach(b => b.addEventListener("click", next));
+document.querySelectorAll("[data-back]").forEach(b => b.addEventListener("click", back));
+
+function collect(){
+  const sec = $("section").value, info = sectionMap[sec] || {};
+  const d = { section: sec, house: info.house, grade: info.grade, classNo: $("classno").value, name: $("name").value.trim(), activity: $("activity").value };
+  const p = played();
+  for (const [k] of ACT_QS) d[k] = p ? val(k) : "";
+  for (const k of ["a_like","a_improve","a_learn"]) d[k] = p ? $(k).value.trim() : "";
+  for (const [k] of OVERALL_QS) d[k] = val(k);
+  for (const k of ["o_best","o_improve","o_suggest"]) d[k] = $(k).value.trim();
+  return d;
+}
+function buildSummary(){
+  const d = collect(), dl = $("summary"); dl.textContent = "";
+  const rows = [["Section", `${d.section} · ${d.house} · Grade ${d.grade}`],["Class no.", d.classNo],["Name", d.name],["Activity", d.activity]];
+  if (played()) rows.push(["Activity rating", `${d.a_overall} of 5 (${RATE[d.a_overall-1]})`]);
+  rows.push(["STEAM Week rating", `${d.o_overall} of 5 (${RATE[d.o_overall-1]})`]);
+  for (const [k,v] of rows){ const dt = document.createElement("dt"); dt.textContent = k; const dd = document.createElement("dd"); dd.textContent = v; dl.append(dt, dd); }
+}
+
+$("form").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const btn = $("submitbtn"), e = $("err4"); e.hidden = true;
+  const data = collect();
+  if (!SCRIPT_URL){ $("donemsg").textContent = "Preview only: this answer was not saved."; return show(5); }
+  btn.disabled = true; btn.textContent = "Submitting…";
+  try{
+    await fetch(SCRIPT_URL, { method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(data) });
+    $("donemsg").textContent = `Thanks, ${data.name.split(" ")[0]}! Your evaluation was submitted.`;
+    show(5);
+  }catch(err){
+    e.hidden = false; e.textContent = "We couldn't submit. Check your internet connection and tap Submit again.";
+  }finally{ btn.disabled = false; btn.textContent = "Submit evaluation"; }
+});
+$("again").addEventListener("click", () => { $("form").reset(); $("sectioninfo").hidden = true; document.querySelectorAll(".q").forEach(q => q.classList.remove("missing")); show(1); });
+show(1);
+</script>
+
+</body>
+</html>
