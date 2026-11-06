@@ -137,7 +137,7 @@ tbody tr.sel{background:#FFF4E6}
 
 <script>
 /* ===== SETTINGS ===== Paste the same Google Apps Script web app URL used in index.html. */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytuRFamO4WEcbss2gKanhUuicVdIleU8bo0skBknmYMfS1Uz0N6ygs16xM6P1QFbx4yA/exec";
+const SCRIPT_URL = "";
 
 const HOUSES = ["RedShield","Graywolf","Bluefire","Silverblade","Orcastel"];
 const HOUSE_COLORS = { RedShield:["#E8392A","#FFFFFF"], Graywolf:["#9B9B9B","#14365C"], Bluefire:["#74F2F7","#14365C"], Silverblade:["#E6E6E6","#14365C"], Orcastel:["#F6F04A","#14365C"] };
@@ -268,15 +268,25 @@ async function load(){
   if (!SCRIPT_URL){ ROWS = sampleRows(); $("updated").textContent = "Sample data"; return showDash(); }
   $("gateerr").hidden = true;
   try{
-    const res = await fetch(`${SCRIPT_URL}?key=${encodeURIComponent(passcode)}&t=${Date.now()}`);
-    const data = await res.json();
+    const base = SCRIPT_URL.trim().replace(/[?#].*$/, "").replace(/\/+$/, "");
+    if (!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(base)) throw new Error("bad_url");
+    let res;
+    try { res = await fetch(`${base}?key=${encodeURIComponent(passcode)}&t=${Date.now()}`); }
+    catch (e) { throw new Error("network"); }
+    let data;
+    try { data = JSON.parse(await res.text()); } catch (e) { throw new Error("not_json"); }
     if (!data.ok){ $("dash").hidden = true; $("dash").style.display = "none"; $("gate").hidden = false; $("gateerr").hidden = false; $("gateerr").textContent = data.error === "wrong_passcode" ? "That passcode is not correct." : "The Sheet returned an error: " + data.error; return; }
     ROWS = data.rows;
     $("updated").textContent = "Updated " + new Date(data.updated).toLocaleString();
     try { sessionStorage.setItem("steam_pass", passcode); } catch(e) {}
     showDash();
   }catch(e){
-    $("gate").hidden = false; $("gateerr").hidden = false; $("gateerr").textContent = "Couldn't reach the Google Sheet. Check the internet connection and the SCRIPT_URL, then try again.";
+    const msg = {
+      bad_url: "The SCRIPT_URL in results.html doesn't look right. It should be exactly https://script.google.com/macros/s/…/exec with nothing after /exec.",
+      not_json: "The Google link answered, but with a web page instead of data. Deploy a New version with Who has access set to Anyone, then try again.",
+      network: "Couldn't reach Google. Check the internet connection, and that SCRIPT_URL in results.html is the same /exec link that works in a browser tab."
+    }[e.message] || "Something went wrong: " + e.message;
+    $("gate").hidden = false; $("gateerr").hidden = false; $("gateerr").textContent = msg;
   }
 }
 
