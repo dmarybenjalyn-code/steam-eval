@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<script src="config.js"></script>
 </head>
 <body>
 <title>STEAM Week Evaluation</title>
@@ -157,8 +158,8 @@ button[disabled]{opacity:.6;cursor:wait}
 </div>
 
 <script>
-/* ===== SETTINGS ===== Paste your Google Apps Script web app URL between the quotes. */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJhfWrzXiROb75iHoVgB--4oPUWASdqMOdIyetNprrTJ6UtQ_Sfd0PiNbU7S41nQd34Q/exec";
+/* The Google link is set in config.js */
+const SCRIPT_URL = String(window.STEAM_SCRIPT_URL || "").trim();
 
 const SECTIONS = {
   RedShield:  [["Truth",7],["Temperance",8],["Obedience",9],["Charity",10],["Azpeitia",11],["Montserrat",11],["Magis",12]],
